@@ -101,6 +101,7 @@ ActiveRecord::Schema.define do
     t.integer  "job_applicants_count", :limit => 11, :default => 0
     t.integer  "view_count",           :limit => 11, :default => 0
     t.integer  "report_count",         :limit => 11, :default => 0
+    t.text     "auth"
   end
 
   create_table "locations", :force => true do |t|

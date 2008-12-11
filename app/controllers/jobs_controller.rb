@@ -1,4 +1,6 @@
 class JobsController < ApplicationController
+  require 'digest'
+
   # GET /jobs
   # GET /jobs.xml
   def index
@@ -61,22 +63,39 @@ class JobsController < ApplicationController
 
   # GET /jobs/1/edit
   def edit
-    @job = Job.find(params[:id])
+    # validate :token before allowing the poster to edit the job
+    # see routes for more info
+    if params[:token] and valid_token?(params[:token])
+      @job = Job.find(params[:id])
+    else
+      flash[:notice] = 'Missing or invalid authentication token'
+      redirect_to "/"
+    end
   end
 
   def verify
     @job = Job.find(params[:id])
-    
-    # todo:
-    # add permission checking here
-    
+    @already_a_poster = Job.find(:first, :conditions => {:poster_email => @job.poster_email, :verified => 1})
+
     if request.put?
-      @job.verified = true
-      
-      # todo: add manual confirmation
-      @job.confirmed = true
-      @job.is_active = true
-      
+      @job.auth = Digest::MD5.hexdigest(Time.now.to_s)
+      if @already_a_poster
+        @job.verified = true
+        @job.confirmed = true
+        @job.is_active = true
+
+        # notify user that the job ad is now active
+        Notifier.deliver_job_posted(@job.poster_email,@job.company, @job.id, @job.auth)
+      else
+        @job.verified = false
+        @job.confirmed = false
+        @job.is_active = false
+
+        # notify user and support(admin) that a new job ad is pending for approval
+        Notifier.deliver_job_posted_pending(@job.poster_email,@job.company)
+        Notifier.deliver_pending_for_approval(@job.company, @job.id, @job.auth)
+      end
+
       @job.save!
       
       redirect_to confirm_job_url(@job)
@@ -85,9 +104,6 @@ class JobsController < ApplicationController
   
   def confirm
     @job = Job.find(params[:id])
-    
-    # todo:
-    # add permission checking here
   end
 
   # POST /jobs
@@ -97,11 +113,9 @@ class JobsController < ApplicationController
 
     respond_to do |format|
       if @job.save
-        flash[:notice] = 'Job was successfully created.'
         format.html { redirect_to verify_job_url(@job) }
         format.xml  { render :xml => @job, :status => :created, :location => @job }
-        Notifier.deliver_job_posted(@job.poster_email,@job.company)
-        
+
       else
         format.html { render :action => "new" }
         format.xml  { render :xml => @job.errors, :status => :unprocessable_entity }
@@ -133,11 +147,59 @@ class JobsController < ApplicationController
   # DELETE /jobs/1.xml
   def destroy
     @job = Job.find(params[:id])
-    @job.destroy
-
-    respond_to do |format|
-      format.html { redirect_to(jobs_url) }
-      format.xml  { head :ok }
+    
+    if valid_token?(params[:token])
+      @job.destroy
+      respond_to do |format|
+        flash[:notice] = 'Job was successfully deleted.'
+        format.html { redirect_to(jobs_url) }
+        format.xml  { head :ok }
+      end
+    else
+        flash[:notice] = 'Missing or invalid authentication token'
+        redirect_to "/"
     end
+  end
+
+  # Activates a job ad.
+  # Only admin can activate a job ad of time job poster.
+  def activate
+    @job = Job.find(params[:id])
+
+    if @job
+      if (!already_a_member?(@job.poster_email) and session[:admin]) or already_a_member?(@job.poster_email)
+        @job.auth == params[:token]
+        @job.verified = true
+        @job.confirmed = true
+        @job.is_active = true
+        flash[:notice] = 'Job was successfully activated.' unless @job.save!
+        Notifier.deliver_approved_job_ad(@job.poster_email, @job.id, @job.auth)
+        redirect_to "/jobs/#{params[:id]}"
+      else
+        redirect_to admin_url
+      end
+    else
+      redirect_to admin_url
+    end
+  end
+
+  # Deactivates a job
+  def deactivate
+    @job = Job.find(params[:id])
+    return false unless @job and @job.auth == params[:token]
+    @job.is_active = false
+    @job.save!
+    redirect_to(jobs_url)
+  end
+
+  protected
+  def already_a_member?(email)
+    @already_a_member = Job.find(:first, :conditions => {:poster_email => email, :verified => 1})
+    return false unless @already_a_member
+  end
+  
+  def valid_token?(token)
+    @token_found = Job.find(:first, :conditions => {:auth => token})
+    return true unless !@token_found
   end
 end

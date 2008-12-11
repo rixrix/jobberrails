@@ -8,12 +8,12 @@
     - if job.id == session[:applied_id]
       .apply-status-ok
         Congratulations, your application has been sent! Best of luck to you!
-  
+
     -# display job outdated warning if applicable
     - if job.created_at < 40.days.ago
       .old-ad
         This job ad has been posted over 40 days ago...
-  
+
     -# show applicants
     - unless confirm
       .applied-to-job
@@ -23,12 +23,12 @@
             applicants
           - else
             applicant
-  
+
     -# show job title
     %h2
       = job_type_image(job.job_type)
       =h job.title
-  
+
     -# show job location
     %p
       %span.fading at
@@ -36,24 +36,24 @@
         = link_to h(job.company), job.url
       - else
         %strong=h job.company
-    
+
       - if job.located_at == "Anywhere"
         %strong== (#{h(job.located_at)})
       - else
         %span.fading in
         %strong=h job.located_at
-    
+
     -# show job description
     .job-description
       = job.description_html
     = br
-    
+
     -# show job apply form
     - if !confirm and job.apply_online?
       #apply_online_now= link_to "&raquo; Apply now", "#"
       #apply_online{hide_unless(@job_applicant)}
         = partial "jobs/parts/apply_form", :job => job, :job_applicant => @job_applicant
-    
+
     #job_bottom
       #job_post_utils
         = link_to "&laquo; go back to the homepage", root_url

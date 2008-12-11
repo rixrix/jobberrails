@@ -17,7 +17,7 @@ class Admin::JobsController < ApplicationController
     @job = Job.find(params[:id])
 
     respond_to do |format|
-      if @job.update_attributes(:is_active => @job.is_active ? false : true)
+      if @job.update_attributes(:is_active => @job.is_active ? false : true, :verified => true, :confirmed => true)
         flash.now[:notice] = @job.is_active ? "Job has been activated" : "Job has been deactivated"
         format.html { redirect_to admin_jobs_url }
         format.js # admin/jobs/update.js.rjs

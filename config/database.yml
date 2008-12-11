@@ -14,7 +14,7 @@ test:
   database: jobberrails_test
   host: localhost
   user: root
-
+  
 production:
   adapter: mysql
   database: jobberrails_production

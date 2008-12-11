@@ -12,7 +12,6 @@
   - form_for((job_applicant), :url => apply_job_url(job), |
               :html => {:method => :post, :id => "apply_online_form", |
                         :class => "job-form", :multipart => true}) do |f| |
-
     %table
       %tr
         %td= f.label :name

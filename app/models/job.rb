@@ -63,7 +63,7 @@ class Job < ActiveRecord::Base
     
     # return location if applicable
     if self.location
-      @located_at = self.g.name
+      @located_at = self.location.name
       return @located_at
     end
     

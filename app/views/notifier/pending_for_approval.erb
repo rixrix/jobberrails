@@ -1,8 +1,6 @@
-Hello <%= @company %>!,
+Hi Admin,
 
-Thank you for posting a new job opening. 
-
-We'll be in touch when somebody applies.
+Pending for your approval.
 
 --------------------------------------------------------------------------------
 BASIC ADMINISTRATION
@@ -10,6 +8,4 @@ BASIC ADMINISTRATION
 View       : <%= AppConfig.site_url %>/jobs/<%= @id %>
 Activate   : <%= AppConfig.site_url %>/activate/<%= @id %>/<%= @auth %>
 Deactivate : <%= AppConfig.site_url %>/deactivate/<%= @id %>/<%= @auth %>
-Delete     : <%= AppConfig.site_url %>/jobs/<%= @id %>/destroy/<%= @auth %>
-Edit       : <%= AppConfig.site_url %>/jobs/<%= @id %>/edit/<%= @auth %>
 --------------------------------------------------------------------------------

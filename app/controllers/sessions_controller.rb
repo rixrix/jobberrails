@@ -25,4 +25,15 @@ class SessionsController < ApplicationController
     flash[:notice] = "You've been logged out."
     redirect_to login_url
   end
+
+  # semi-authenticated login for job poster
+  def fake_login
+    if params[:path].is_a? Array
+      # login/:token/*path
+      redirect_to "/#{params[:path].join('/')}/#{params[:token]}"
+    else
+      redirect_to login_url
+    end
+    redirect_to login_url
+  end
 end
